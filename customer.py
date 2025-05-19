@@ -1,7 +1,8 @@
+# customer.py
 class Customer:
     def __init__(self, name):
-        self._name = None
-        self.name = name  # Use setter for validation
+        self.name = name  # Triggers the setter
+        self._orders = []
 
     @property
     def name(self):
@@ -9,39 +10,25 @@ class Customer:
 
     @name.setter
     def name(self, value):
-        if not isinstance(value, str):
-            raise TypeError("Name must be a string")
-        if not 1 <= len(value) <= 15:
-            raise ValueError("Name must be 1-15 characters")
-        self._name = value
+        if isinstance(value, str) and 1 <= len(value) <= 15:
+            self._name = value
+        else:
+            raise ValueError("Name must be a string between 1 and 15 characters")
 
     def orders(self):
-        from order import Order
-        return [order for order in Order._orders if order.customer == self]
+        return self._orders
 
     def coffees(self):
-        from coffee import Coffee
-        return list(set(order.coffee for order in self.orders()))
+        return list({order.coffee for order in self._orders})
 
     def create_order(self, coffee, price):
-        from order import Order
-        from coffee import Coffee
-        if not isinstance(coffee, Coffee):
-            raise TypeError("Coffee must be a Coffee instance")
-        order = Order(self, coffee, price)
-        Order._orders.append(order)
-        return order
+        return Order(self, coffee, price)
 
     @classmethod
     def most_aficionado(cls, coffee):
-        from coffee import Coffee
-        from order import Order
-        if not isinstance(coffee, Coffee):
-            raise TypeError("Coffee must be a Coffee instance")
         customer_spending = {}
         for order in coffee.orders():
-            customer = order.customer
-            customer_spending[customer] = customer_spending.get(customer, 0) + order.price
+            customer_spending[order.customer] = customer_spending.get(order.customer, 0) + order.price
         if not customer_spending:
             return None
-        return max(customer_spending.items(), key=lambda x: x[1])[0]
+        return max(customer_spending, key=customer_spending.get)
